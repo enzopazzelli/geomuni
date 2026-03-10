@@ -677,7 +677,8 @@ export async function getHistorialGlobal() {
         h.*,
         p.nombre as responsable_nombre,
         i.tipo as reporte_tipo,
-        i.posicion
+        ST_Y(ST_Centroid(i.posicion::geometry)) as lat,
+        ST_X(ST_Centroid(i.posicion::geometry)) as lng
       FROM historial_obras h
       LEFT JOIN personal p ON h.responsable_id = p.id
       LEFT JOIN infraestructura i ON h.infraestructura_id = i.id

@@ -332,12 +332,15 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
                 Historial de Actividad
               </label>
               <div className="space-y-3">
-                {historial.map(h => (
+                {historial.map(h => {
+                  const isGeom = h.estado_anterior === h.estado_nuevo;
+                  return (
                   <div key={h.id} className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
                     <div className="flex justify-between items-start mb-1 gap-2">
-                      <span className="text-[9px] font-black text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded-full shrink-0">
-                        {h.estado_nuevo}
-                      </span>
+                      {isGeom
+                        ? <span className="text-[9px] font-black text-orange-600 uppercase bg-orange-50 px-2 py-0.5 rounded-full shrink-0">📐 Tramo modificado</span>
+                        : <span className="text-[9px] font-black text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded-full shrink-0">{h.estado_nuevo}</span>
+                      }
                       <span className="text-[9px] font-bold text-slate-400 text-right">
                         {new Date(h.fecha_registro).toLocaleString('es-AR', {
                           day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
@@ -349,7 +352,8 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
                       <p className="text-[11px] text-slate-500 mt-1 italic">"{h.observaciones}"</p>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}

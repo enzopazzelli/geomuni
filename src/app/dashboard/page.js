@@ -447,7 +447,7 @@ export default function DashboardPage() {
 
   const handleGoToMap = (item, type) => {
     const params = new URLSearchParams({ lat: item.lat || 0, lng: item.lng || 0, id: item.id, type });
-    router.push(`/?${params.toString()}`);
+    router.push(`/mapa?${params.toString()}`);
   };
 
   // Reset page on filter change
@@ -772,21 +772,40 @@ export default function DashboardPage() {
                   <table className="w-full text-left border-collapse text-sm">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-100">
-                        <Th>Fecha</Th><Th>Obra / Reporte</Th><Th>Nuevo Estado</Th><Th>Responsable</Th><Th>Observación</Th>
+                        <Th>Fecha</Th><Th>Obra / Reporte</Th><Th>Cambio</Th><Th>Responsable</Th><Th>Observación</Th><Th></Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-50">
                       {pagedHistorial.length === 0 ? (
-                        <tr><td colSpan="5" className="px-6 py-14 text-center font-bold text-slate-400 text-sm">Sin resultados.</td></tr>
-                      ) : pagedHistorial.map(item => (
+                        <tr><td colSpan="6" className="px-6 py-14 text-center font-bold text-slate-400 text-sm">Sin resultados.</td></tr>
+                      ) : pagedHistorial.map(item => {
+                        const isGeom = item.estado_anterior === item.estado_nuevo;
+                        return (
                         <tr key={item.id} className="hover:bg-slate-50/70 transition-colors group">
                           <Td><span className="text-xs text-slate-400 font-bold">{new Date(item.fecha_registro).toLocaleString('es-AR')}</span></Td>
-                          <Td><span className="font-black capitalize">{item.reporte_tipo?.replace(/_/g,' ')}</span></Td>
-                          <Td><span className="text-[9px] font-black uppercase bg-slate-900 text-white px-2 py-0.5 rounded-lg">{item.estado_nuevo?.replace(/_/g,' ')}</span></Td>
-                          <Td><span className="text-slate-600 font-semibold">{item.responsable_nombre}</span></Td>
+                          <Td>
+                            <span className="font-black capitalize">{item.reporte_tipo?.replace(/_/g,' ')}</span>
+                            <span className="block text-[9px] text-slate-400 font-mono mt-0.5">#{item.infraestructura_id?.slice(0,8)}</span>
+                          </Td>
+                          <Td>
+                            {isGeom
+                              ? <span className="text-[9px] font-black uppercase bg-orange-100 text-orange-700 px-2 py-0.5 rounded-lg">📐 Tramo</span>
+                              : <span className="text-[9px] font-black uppercase bg-slate-900 text-white px-2 py-0.5 rounded-lg">{item.estado_nuevo?.replace(/_/g,' ')}</span>
+                            }
+                          </Td>
+                          <Td><span className="text-slate-600 font-semibold">{item.responsable_nombre || '—'}</span></Td>
                           <Td><span className="text-xs text-slate-400 italic max-w-[180px] truncate block">{item.observaciones || '—'}</span></Td>
+                          <Td>
+                            {item.lat && item.lng && (
+                              <button onClick={() => handleGoToMap({ id: item.infraestructura_id, lat: item.lat, lng: item.lng }, 'Reporte')}
+                                className="text-[9px] font-black uppercase bg-blue-50 text-blue-700 hover:bg-blue-100 px-2 py-1 rounded-lg border border-blue-100 transition-colors whitespace-nowrap">
+                                🗺️ Mapa
+                              </button>
+                            )}
+                          </Td>
                         </tr>
-                      ))}
+                        );
+                      })}
                     </tbody>
                   </table>
                 </div>
