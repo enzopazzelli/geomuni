@@ -944,7 +944,7 @@ export default function LeafletMap() {
 
       {/* CONTROLES MOBILE — visible solo en mobile */}
       {isMobile && !isEditingGeom && (
-        <div className="absolute top-4 left-4 z-10">
+        <div className="absolute top-4 left-16 z-10">
           {/* Botón FAB */}
           <button
             onClick={() => setShowMobileControls(v => !v)}
