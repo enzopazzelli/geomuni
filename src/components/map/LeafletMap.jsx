@@ -115,8 +115,9 @@ export default function LeafletMap() {
   
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [isEditingGeom, setIsEditingGeom] = useState(false);
-  const isEditingGeomRef = useRef(false);
-  const longPressTimer   = useRef(null);
+  const isEditingGeomRef  = useRef(false);
+  const longPressTimer    = useRef(null);
+  const activeTouchCount  = useRef(0);
   const [isSaving, setIsSaving] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
   const [showMobileControls, setShowMobileControls] = useState(false);
@@ -882,31 +883,32 @@ export default function LeafletMap() {
 
     // Long press en mobile = equivalente a click derecho
     const container = mapInstance.getContainer();
+    const cancelLongPress = () => { clearTimeout(longPressTimer.current); longPressTimer.current = null; };
     const onTouchStart = (e) => {
-      // Cancelar si es gesto multi-touch (pellizco para zoom)
-      if (e.touches.length > 1) {
-        clearTimeout(longPressTimer.current);
-        longPressTimer.current = null;
-        return;
-      }
+      activeTouchCount.current = e.touches.length;
+      // Cualquier gesto multi-touch (pellizco/zoom) cancela el long press
+      if (e.touches.length > 1) { cancelLongPress(); return; }
       if (!['editor', 'administrador'].includes(userRoleRef.current) || isEditingGeomRef.current) return;
       const touch = e.touches[0];
       longPressTimer.current = setTimeout(() => {
+        // Verificar al momento de disparar que sigue siendo toque simple
+        if (activeTouchCount.current !== 1) return;
         const pt = mapInstance.mouseEventToContainerPoint({ clientX: touch.clientX, clientY: touch.clientY });
         const latlng = mapInstance.containerPointToLatLng(pt);
         setContextMenu({ x: touch.clientX, y: touch.clientY, lat: latlng.lat, lng: latlng.lng });
       }, 600);
     };
-    const onTouchMove  = () => { clearTimeout(longPressTimer.current); longPressTimer.current = null; };
-    const onTouchEnd   = () => { clearTimeout(longPressTimer.current); longPressTimer.current = null; };
-    container.addEventListener('touchstart', onTouchStart, { passive: true });
-    container.addEventListener('touchmove',  onTouchMove,  { passive: true });
-    container.addEventListener('touchend',   onTouchEnd,   { passive: true });
+    const onTouchMove  = (e) => { activeTouchCount.current = e.touches.length; cancelLongPress(); };
+    const onTouchEnd   = (e) => { activeTouchCount.current = e.touches.length; cancelLongPress(); };
+    // capture:true — se ejecuta antes que los handlers de Leaflet (evita stopPropagation)
+    container.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
+    container.addEventListener('touchmove',  onTouchMove,  { passive: true, capture: true });
+    container.addEventListener('touchend',   onTouchEnd,   { passive: true, capture: true });
 
     return () => {
-      container.removeEventListener('touchstart', onTouchStart);
-      container.removeEventListener('touchmove',  onTouchMove);
-      container.removeEventListener('touchend',   onTouchEnd);
+      container.removeEventListener('touchstart', onTouchStart, { capture: true });
+      container.removeEventListener('touchmove',  onTouchMove,  { capture: true });
+      container.removeEventListener('touchend',   onTouchEnd,   { capture: true });
       if (map.current) {
         map.current.remove();
         map.current = null;
