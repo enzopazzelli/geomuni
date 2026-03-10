@@ -411,7 +411,19 @@ export async function updateInfraestructura(id, { estado, responsable_id, fecha_
 
 export async function updateInfraGeometry(id, geometry, observaciones) {
   try {
-    await requireRole('editor');
+    const session = await auth();
+    if (!session?.user) throw new Error('No autenticado');
+    const level = ROLE_LEVEL[session.user.rol] ?? -1;
+    if (level < ROLE_LEVEL['tecnico']) throw new Error('Permiso insuficiente.');
+
+    // Técnico solo puede modificar tramos adjudicados a sí mismo
+    if (session.user.rol === 'tecnico') {
+      const check = await sql`SELECT adjudicado_a FROM infraestructura WHERE id = ${id}`;
+      if (check[0]?.adjudicado_a !== session.user.id) {
+        throw new Error('Solo podés modificar tramos que te fueron asignados.');
+      }
+    }
+
     const current = await sql`SELECT estado FROM infraestructura WHERE id = ${id}`;
     const estado = current[0]?.estado;
     await sql`

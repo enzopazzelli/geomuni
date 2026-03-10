@@ -706,7 +706,7 @@ export default function LeafletMap() {
   };
 
   const handleStartModifyInfra = () => {
-    if (!selectedFeature || !['editor', 'administrador'].includes(userRole) || !map.current) return;
+    if (!selectedFeature || !['editor', 'administrador', 'tecnico'].includes(userRole) || !map.current) return;
     const layer = findLayerByFeatureId(selectedFeature.details.id);
     if (!layer) return;
     isEditingGeomRef.current = true; setIsEditingGeom(true);
@@ -1548,7 +1548,7 @@ export default function LeafletMap() {
               {(selectedFeature.type === 'Reporte' || selectedFeature.type === 'Reporte Vial') ? (
                 <div className="flex flex-col gap-2">
                   <button onClick={() => setIsInfraModalOpen(true)} className="w-full bg-slate-900 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-transform active:scale-95">🛠️ Gestionar Reporte</button>
-                  {selectedFeature.type === 'Reporte Vial' && ['editor','administrador'].includes(userRole) && (
+                  {selectedFeature.type === 'Reporte Vial' && ['editor','administrador','tecnico'].includes(userRole) && (
                     <button onClick={handleStartModifyInfra} className="w-full bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors active:scale-95">✏️ Modificar Tramo</button>
                   )}
                 </div>
