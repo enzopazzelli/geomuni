@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import AppSidebar from '@/components/AppSidebar';
 import { cambiarPassword } from '@/app/actions/geoActions';
 
@@ -70,6 +70,16 @@ export default function PerfilPage() {
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Cerrar sesión — visible en mobile donde el sidebar no tiene este botón prominente */}
+          <div className="md:hidden mb-6">
+            <button
+              onClick={() => signOut({ callbackUrl: '/inicio' })}
+              className="w-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 py-3.5 rounded-2xl text-sm font-black uppercase tracking-wide transition-all"
+            >
+              🚪 Cerrar sesión
+            </button>
           </div>
 
           {/* Cambiar contraseña */}

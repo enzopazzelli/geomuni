@@ -6,6 +6,10 @@ import bcrypt from "bcryptjs";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  session: {
+    strategy: 'jwt',
+    maxAge: 8 * 60 * 60, // 8 horas — cierra sesión al final de la jornada laboral
+  },
   providers: [
     Credentials({
       async authorize(credentials) {

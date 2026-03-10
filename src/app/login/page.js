@@ -21,7 +21,7 @@ export default function LoginPage() {
       if (result.error) {
         setError("Credenciales inválidas. Intente nuevamente.");
       } else {
-        router.push("/");
+        router.push("/mapa");
         router.refresh();
       }
     } catch {
@@ -37,7 +37,7 @@ export default function LoginPage() {
       {/* Fondo */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/bg-ciudad.jpg')" }}
+        style={{ backgroundImage: "url('/bg-aniatuya.jpg')" }}
       />
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/85 via-slate-900/75 to-slate-950/90" />
 

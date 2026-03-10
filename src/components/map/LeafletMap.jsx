@@ -141,6 +141,7 @@ export default function LeafletMap() {
   const colorModeInitialized  = useRef(false);
   const tecnicoLayerInit      = useRef(false);
   const isMobileRef           = useRef(false);
+  const userRoleRef           = useRef('consultor');
 
   const [isMobile, setIsMobile]         = useState(false);
   const [sheetExpanded, setSheetExpanded] = useState(false);
@@ -153,6 +154,8 @@ export default function LeafletMap() {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
+
+  useEffect(() => { userRoleRef.current = userRole; }, [userRole]);
 
   useEffect(() => {
     if (selectedFeature) setShowMobileControls(false);
@@ -838,7 +841,7 @@ export default function LeafletMap() {
     });
 
     mapInstance.on('contextmenu', (e) => {
-      if (!['editor', 'administrador'].includes(userRole) || isEditingGeomRef.current) return;
+      if (!['editor', 'administrador'].includes(userRoleRef.current) || isEditingGeomRef.current) return;
       setContextMenu({
         x: e.originalEvent.clientX, 
         y: e.originalEvent.clientY, 
@@ -880,7 +883,7 @@ export default function LeafletMap() {
     // Long press en mobile = equivalente a click derecho
     const container = mapInstance.getContainer();
     const onTouchStart = (e) => {
-      if (!['editor', 'administrador'].includes(userRole) || isEditingGeomRef.current) return;
+      if (!['editor', 'administrador'].includes(userRoleRef.current) || isEditingGeomRef.current) return;
       const touch = e.touches[0];
       longPressTimer.current = setTimeout(() => {
         const pt = mapInstance.mouseEventToContainerPoint({ clientX: touch.clientX, clientY: touch.clientY });

@@ -8,7 +8,7 @@ import { getReportesPendientesCount } from '@/app/actions/geoActions';
 import NotificationBell from './NotificationBell';
 
 const NAV = [
-  { href: '/',              icon: '🗺️',  label: 'Mapa',            roles: ['administrador','editor','consultor','tecnico'] },
+  { href: '/mapa',          icon: '🗺️',  label: 'Mapa',            roles: ['administrador','editor','consultor','tecnico'] },
   { href: '/dashboard',     icon: '📊',  label: 'Dashboard',       roles: ['administrador','editor','consultor'] },
   { href: '/estadisticas',  icon: '📈',  label: 'Estadísticas',    roles: ['administrador','editor','consultor'] },
   { href: '/mis-reportes',  icon: '📋',  label: 'Mis Reportes',    roles: ['tecnico'] },
@@ -73,7 +73,7 @@ export default function AppSidebar() {
         {/* Nav */}
         <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
           {links.map(({ href, icon, label }) => {
-            const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+            const active = pathname.startsWith(href);
             const isMisReportes = href === '/mis-reportes';
             return (
               <Link key={href} href={href}
@@ -115,7 +115,7 @@ export default function AppSidebar() {
       {/* ── MOBILE BOTTOM NAV ──────────────────────────────────────────────── */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-slate-900 border-t border-slate-800 flex items-stretch h-16">
         {links.map(({ href, icon, label }) => {
-          const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+          const active = pathname.startsWith(href);
           const isMisReportes = href === '/mis-reportes';
           return (
             <Link key={href} href={href}
@@ -143,6 +143,14 @@ export default function AppSidebar() {
           <span className="text-xl leading-none">👤</span>
           <span className="text-[9px] font-black uppercase tracking-tight">Perfil</span>
         </Link>
+        {/* Cerrar sesión en mobile */}
+        <button
+          onClick={() => signOut({ callbackUrl: '/inicio' })}
+          className="flex-1 flex flex-col items-center justify-center gap-0.5 text-red-500 hover:text-red-400 transition-colors"
+        >
+          <span className="text-xl leading-none">🚪</span>
+          <span className="text-[9px] font-black uppercase tracking-tight">Salir</span>
+        </button>
       </nav>
     </>
   );

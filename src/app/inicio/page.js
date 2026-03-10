@@ -19,7 +19,7 @@ export default function LandingPage() {
       {/* Fondo */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: "url('/bg-ciudad.jpg')" }}
+        style={{ backgroundImage: "url('/bg-aniatuya.jpg')" }}
       />
       {/* Overlay degradado */}
       <div className="absolute inset-0 bg-gradient-to-b from-slate-950/80 via-slate-900/70 to-slate-950/90" />
