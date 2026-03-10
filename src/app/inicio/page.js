@@ -118,7 +118,7 @@ export default function LandingPage() {
             <p className="text-slate-600 text-[10px] font-bold">
               Toda sugerencia es bien recibida —{' '}
               <a
-                href="mailto:geomuni@geomuni.gov.ar"
+                href="mailto:enzopazzelli1@gmail.com"
                 className="text-slate-500 hover:text-slate-300 transition-colors underline underline-offset-2"
               >
                 contacto

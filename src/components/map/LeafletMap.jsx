@@ -140,7 +140,6 @@ export default function LeafletMap() {
   const [savingNuevoProp, setSavingNuevoProp] = useState(false);
   const [colorMode, setColorMode] = useState('fiscal');
   const colorModeInitialized  = useRef(false);
-  const tecnicoLayerInit      = useRef(false);
   const isMobileRef           = useRef(false);
   const userRoleRef           = useRef('consultor');
 
@@ -639,13 +638,6 @@ export default function LeafletMap() {
     if (map.current) setupLayers();
   }, [colorMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Ocultar parcelas por defecto para el rol técnico (solo la primera vez que carga el rol)
-  useEffect(() => {
-    if (userRole === 'tecnico' && !tecnicoLayerInit.current) {
-      tecnicoLayerInit.current = true;
-      setLayersVisibility(prev => ({ ...prev, parcelas: false }));
-    }
-  }, [userRole]);
 
   const handleCreateIncidencia = async (tipo) => {
     if (!contextMenu) return;

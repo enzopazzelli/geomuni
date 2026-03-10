@@ -17,8 +17,8 @@ const LeafletMap = dynamic(() => import('@/components/map/LeafletMap'), {
 
 export default function MapaPage() {
   return (
-    <main className="flex min-h-screen flex-col bg-slate-50">
-      <header className="flex h-16 items-center border-b bg-white px-4 md:px-6 gap-4 shadow-sm">
+    <main className="flex h-screen flex-col bg-slate-50">
+      <header className="flex h-16 shrink-0 items-center border-b bg-white px-4 md:px-6 gap-4 shadow-sm">
         <div className="flex items-center gap-2 md:gap-3">
           <span className="text-xl font-black text-blue-600 tracking-tighter uppercase italic">GeoMuni</span>
           <div className="h-5 w-px bg-slate-200" />
@@ -37,7 +37,7 @@ export default function MapaPage() {
         </nav>
       </header>
 
-      <section className="flex-1 overflow-hidden p-4">
+      <section className="flex-1 overflow-hidden p-4 pb-20 md:pb-4">
         <div className="h-full overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
           <LeafletMap />
         </div>

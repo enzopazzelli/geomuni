@@ -58,6 +58,7 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
     setIsSaving(true);
     const res = await updateInfraestructura(feature.details.id, formData);
     if (res.success) {
+      window.dispatchEvent(new Event('reportes-updated'));
       await onRefresh();
       onClose();
     } else {

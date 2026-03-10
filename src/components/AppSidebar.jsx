@@ -33,9 +33,11 @@ export default function AppSidebar() {
     if (rol !== 'tecnico') return;
     const refresh = () => getReportesPendientesCount().then(setPendingCount);
     refresh();
+    const interval = setInterval(refresh, 60000);
     window.addEventListener('focus', refresh);
     window.addEventListener('reportes-updated', refresh);
     return () => {
+      clearInterval(interval);
       window.removeEventListener('focus', refresh);
       window.removeEventListener('reportes-updated', refresh);
     };
