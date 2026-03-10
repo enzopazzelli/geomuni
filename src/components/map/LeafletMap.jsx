@@ -118,6 +118,7 @@ export default function LeafletMap() {
   const isEditingGeomRef = useRef(false);
   const [isSaving, setIsSaving] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
+  const [showMobileControls, setShowMobileControls] = useState(false);
   
   const [layersVisibility, setLayersVisibility] = useState({ barrios: true, parcelas: true, infraestructura: true });
   const [mapStyle, setMapStyle] = useState('streets'); // 'streets' o 'satellite'
@@ -151,6 +152,10 @@ export default function LeafletMap() {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
+
+  useEffect(() => {
+    if (selectedFeature) setShowMobileControls(false);
+  }, [selectedFeature]);
 
   const filteredPropietarios = useMemo(() => {
     const needle = propSearch.toLowerCase();
@@ -937,6 +942,66 @@ export default function LeafletMap() {
         </div>
       </div>
 
+      {/* CONTROLES MOBILE — visible solo en mobile */}
+      {isMobile && !isEditingGeom && (
+        <div className="absolute top-4 left-4 z-10">
+          {/* Botón FAB */}
+          <button
+            onClick={() => setShowMobileControls(v => !v)}
+            className={`flex items-center gap-2 px-3 py-2 rounded-2xl shadow-lg border text-xs font-black transition-all ${showMobileControls ? 'bg-slate-900 text-white border-slate-700' : 'bg-white/95 text-slate-700 border-slate-200 backdrop-blur'}`}
+          >
+            🎛️ <span className="uppercase tracking-wide">Capas</span>
+          </button>
+
+          {/* Panel desplegable */}
+          {showMobileControls && (
+            <div className="mt-2 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden w-52">
+              {/* Estilo de mapa */}
+              <div className="px-4 pt-3 pb-2">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Vista</p>
+                <div className="flex gap-1 bg-slate-100 p-1 rounded-xl">
+                  <button onClick={() => toggleStyle('streets')}
+                    className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${mapStyle === 'streets' ? 'bg-slate-900 text-white shadow' : 'text-slate-400'}`}>
+                    🗺️ Calles
+                  </button>
+                  <button onClick={() => toggleStyle('satellite')}
+                    className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${mapStyle === 'satellite' ? 'bg-slate-900 text-white shadow' : 'text-slate-400'}`}>
+                    🛰️ Satélite
+                  </button>
+                </div>
+              </div>
+
+              {/* Capas */}
+              <div className="px-4 pb-2 border-t border-slate-100 pt-2">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Capas</p>
+                {Object.entries(layersVisibility).map(([key, val]) => (
+                  <label key={key} className="flex items-center justify-between cursor-pointer py-2 border-b border-slate-50 last:border-0">
+                    <span className="text-xs font-bold text-slate-700 flex items-center gap-2">
+                      <span>{LAYER_LABELS[key]?.icon}</span>
+                      {LAYER_LABELS[key]?.label ?? key}
+                    </span>
+                    <input type="checkbox" checked={val} onChange={() => toggleLayer(key)} className="w-4 h-4 rounded accent-blue-600 cursor-pointer" />
+                  </label>
+                ))}
+              </div>
+
+              {/* Modo de color */}
+              <div className="px-4 pb-3 border-t border-slate-100 pt-2">
+                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Color parcelas</p>
+                <div className="grid grid-cols-2 gap-1">
+                  {COLOR_MODES.map(m => (
+                    <button key={m.key} onClick={() => setColorMode(m.key)}
+                      className={`py-1.5 rounded-xl text-[8px] font-black uppercase transition-all ${colorMode === m.key ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                      {m.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* PERFIL Y ESTILO DE MAPA — oculto en mobile */}
       <div className="hidden md:flex absolute left-4 top-20 flex-col gap-3 z-10 w-56">
         <div className="bg-white/90 backdrop-blur shadow-2xl p-4 rounded-[24px] border border-slate-200">
@@ -1016,7 +1081,7 @@ export default function LeafletMap() {
       )}
 
       {/* SIDEBAR / BOTTOM SHEET */}
-      {selectedFeature && !(isMobile && isInfraModalOpen) && (
+      {selectedFeature && !(isMobile && isInfraModalOpen) && !(isMobile && isEditingGeom) && (
         <aside className={
           isMobile
             ? `fixed bottom-0 left-0 right-0 bg-white shadow-2xl border-t border-slate-200 z-[200] flex flex-col transition-all duration-300 rounded-t-3xl overflow-hidden ${sheetExpanded ? 'h-[82vh]' : 'h-52'}`

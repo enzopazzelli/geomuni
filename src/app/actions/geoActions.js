@@ -814,6 +814,8 @@ export async function deleteUsuario(id) {
       const admins = await sql`SELECT id FROM usuarios WHERE rol = 'administrador';`;
       if (admins.length <= 1) return { error: 'No podés eliminar el único administrador.' };
     }
+    // Desasignar reportes adjudicados antes de eliminar (evita FK violation)
+    await sql`UPDATE infraestructura SET adjudicado_a = NULL, fecha_adjudicacion = NULL WHERE adjudicado_a = ${id};`;
     await sql`DELETE FROM usuarios WHERE id = ${id};`;
     return { success: true };
   } catch (error) {
