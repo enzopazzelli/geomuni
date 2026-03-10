@@ -45,7 +45,7 @@ export default function PerfilPage() {
     <div className="flex min-h-screen bg-slate-50">
       <AppSidebar />
 
-      <main className="flex-1 p-8">
+      <main className="flex-1 p-8 pb-20 md:pb-8">
         <div className="max-w-lg mx-auto">
 
           {/* Header */}

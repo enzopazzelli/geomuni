@@ -138,6 +138,19 @@ export default function LeafletMap() {
   const [colorMode, setColorMode] = useState('fiscal');
   const colorModeInitialized  = useRef(false);
   const tecnicoLayerInit      = useRef(false);
+  const isMobileRef           = useRef(false);
+
+  const [isMobile, setIsMobile]         = useState(false);
+  const [sheetExpanded, setSheetExpanded] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    isMobileRef.current = mq.matches;
+    setIsMobile(mq.matches);
+    const handler = e => { isMobileRef.current = e.matches; setIsMobile(e.matches); };
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   const getPlusCode = (lat, lng) => {
     try {
@@ -319,7 +332,7 @@ export default function LeafletMap() {
               id: isVial ? feature.properties.tipo.toUpperCase().replace('_', ' ') : feature.properties.tipo.toUpperCase(),
               details: { ...feature.properties, plus_code: getPlusCode(latlng.lat, latlng.lng) }
             });
-            setIsInfraModalOpen(true);
+            if (!isMobileRef.current) setIsInfraModalOpen(true);
           },
           mouseover: (e) => { if (!isEditingGeomRef.current) { const el = e.target.getElement(); if (el) el.style.cursor = 'pointer'; } },
           mouseout:  (e) => { const el = e.target.getElement(); if (el) el.style.cursor = ''; },
@@ -349,7 +362,7 @@ export default function LeafletMap() {
             id: feature.properties.tipo.toUpperCase(),
             details: { ...feature.properties, plus_code: getPlusCode(lat, lng) }
           });
-          setIsInfraModalOpen(true);
+          if (!isMobileRef.current) setIsInfraModalOpen(true);
         });
         clusterGroup.addLayer(marker);
       } else {
@@ -842,7 +855,7 @@ export default function LeafletMap() {
               const feat = dataSource.features.find(f => f.properties.id === focusId);
               if (feat) {
                 setSelectedFeature({ type: focusType, id: focusId, details: feat.properties });
-                if (focusType !== 'Parcela') setIsInfraModalOpen(true);
+                if (focusType !== 'Parcela' && !isMobileRef.current) setIsInfraModalOpen(true);
               }
             }
           }, 500);
@@ -876,8 +889,8 @@ export default function LeafletMap() {
       }} />
       <div ref={mapContainer} className="flex-1 h-full z-0" />
 
-      {/* FILTROS */}
-      <div className="absolute right-4 top-20 z-10 flex flex-col gap-2">
+      {/* FILTROS — oculto en mobile */}
+      <div className="hidden md:flex absolute right-4 top-20 z-10 flex-col gap-2">
         <div className="bg-white p-4 rounded-2xl shadow-xl border border-slate-200 w-48">
           <p className="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest text-center">Visualización</p>
           <div className="space-y-1">
@@ -916,8 +929,8 @@ export default function LeafletMap() {
         </div>
       </div>
 
-      {/* PERFIL Y ESTILO DE MAPA */}
-      <div className="absolute left-4 top-20 flex flex-col gap-3 z-10 w-56">
+      {/* PERFIL Y ESTILO DE MAPA — oculto en mobile */}
+      <div className="hidden md:flex absolute left-4 top-20 flex-col gap-3 z-10 w-56">
         <div className="bg-white/90 backdrop-blur shadow-2xl p-4 rounded-[24px] border border-slate-200">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-lg shadow-blue-500/20">
@@ -994,19 +1007,32 @@ export default function LeafletMap() {
         </div>
       )}
 
-      {/* SIDEBAR */}
-      {selectedFeature && (
-        <aside className="absolute right-4 top-4 bottom-24 w-80 bg-white shadow-2xl rounded-3xl border border-slate-200 overflow-hidden z-10 flex flex-col">
-          <div className={`p-6 text-white ${
-            selectedFeature.type === 'Parcela' ? 'bg-blue-600' : 
-            selectedFeature.type === 'Barrio' ? 'bg-emerald-600' : 
+      {/* SIDEBAR / BOTTOM SHEET */}
+      {selectedFeature && !(isMobile && isInfraModalOpen) && (
+        <aside className={
+          isMobile
+            ? `fixed bottom-0 left-0 right-0 bg-white shadow-2xl border-t border-slate-200 z-[200] flex flex-col transition-all duration-300 rounded-t-3xl overflow-hidden ${sheetExpanded ? 'h-[82vh]' : 'h-52'}`
+            : 'absolute right-4 top-4 bottom-24 w-80 bg-white shadow-2xl rounded-3xl border border-slate-200 overflow-hidden z-10 flex flex-col'
+        }>
+          {/* Handle para expandir/colapsar en mobile */}
+          {isMobile && (
+            <button
+              onClick={() => setSheetExpanded(v => !v)}
+              className="w-full flex flex-col items-center pt-2 pb-1 shrink-0"
+              aria-label={sheetExpanded ? 'Colapsar' : 'Expandir'}>
+              <div className="w-10 h-1 bg-slate-200 rounded-full" />
+            </button>
+          )}
+          <div className={`${isMobile ? 'px-4 py-3' : 'p-6'} text-white shrink-0 ${
+            selectedFeature.type === 'Parcela' ? 'bg-blue-600' :
+            selectedFeature.type === 'Barrio' ? 'bg-emerald-600' :
             'bg-slate-800'
           }`}>
             <div className="flex justify-between items-start mb-2">
               <span className="text-[9px] font-black opacity-70 uppercase tracking-widest px-2 py-1 bg-black/20 rounded-full">{selectedFeature.type}</span>
-              <button onClick={() => setSelectedFeature(null)} className="font-bold">✕</button>
+              <button onClick={() => { setSelectedFeature(null); setSheetExpanded(false); }} className="font-bold">✕</button>
             </div>
-            <h2 className="text-2xl font-black truncate">{selectedFeature.id}</h2>
+            <h2 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-black truncate`}>{selectedFeature.id}</h2>
             {selectedFeature.details.plus_code && (
               <p className="text-[10px] font-bold opacity-80 mt-1 flex items-center gap-1">
                 📍 {selectedFeature.details.plus_code}

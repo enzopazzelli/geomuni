@@ -22,18 +22,21 @@ const LeafletMap = dynamic(() => import('@/components/map/LeafletMap'), {
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col bg-slate-50">
-      <header className="flex h-16 items-center border-b bg-white px-6 gap-4 shadow-sm">
-        <div className="flex items-center gap-3">
+      <header className="flex h-16 items-center border-b bg-white px-4 md:px-6 gap-4 shadow-sm">
+        <div className="flex items-center gap-2 md:gap-3">
           <span className="text-xl font-black text-blue-600 tracking-tighter uppercase italic">GeoMuni</span>
           <div className="h-5 w-px bg-slate-200" />
           <div className="flex flex-col leading-none">
             <span className="text-sm font-black text-slate-800 uppercase tracking-tight">Añatuya</span>
-            <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Santiago del Estero</span>
+            <span className="hidden sm:block text-[9px] font-bold text-slate-400 uppercase tracking-widest">Santiago del Estero</span>
           </div>
         </div>
         <nav className="ml-auto">
-          <Link href="/dashboard" className="bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-blue-600 transition-all">
+          <Link href="/dashboard" className="hidden md:inline-flex bg-slate-900 text-white px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-blue-600 transition-all items-center gap-1.5">
             📊 Panel de Control
+          </Link>
+          <Link href="/dashboard" className="md:hidden bg-slate-900 text-white p-2 rounded-xl text-base hover:bg-blue-600 transition-all">
+            📊
           </Link>
         </nav>
       </header>

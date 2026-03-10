@@ -71,7 +71,6 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
     const res = await adjudicarReporte(feature.details.id, adjudicadoId || null);
     if (res.success) {
       await onRefresh();
-      // Actualizar el badge localmente
       const tecnico = tecnicos.find(t => t.id === adjudicadoId);
       feature.details.adjudicado_a      = adjudicadoId || null;
       feature.details.adjudicado_nombre = tecnico?.nombre || null;
@@ -103,28 +102,39 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
   const headerColor = HEADER_COLORS[feature.details.tipo] || 'bg-slate-700';
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
-      <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden border border-slate-200">
+    <div className="fixed inset-0 z-[100] bg-slate-900/60 backdrop-blur-sm flex flex-col justify-end md:justify-center md:p-4">
+
+      {/* Tap backdrop to close */}
+      <div className="absolute inset-0" onClick={onClose} />
+
+      {/* Modal container — bottom sheet on mobile, centered dialog on desktop */}
+      <div className="relative bg-white w-full md:max-w-lg md:mx-auto rounded-t-3xl md:rounded-[40px] shadow-2xl border border-slate-200 flex flex-col max-h-[92vh] md:max-h-[85vh]">
+
+        {/* Drag handle — mobile only */}
+        <div className="md:hidden flex justify-center pt-3 pb-1 shrink-0">
+          <div className="w-10 h-1 rounded-full bg-slate-200" />
+        </div>
 
         {/* HEADER */}
-        <div className={`p-8 ${headerColor} text-white`}>
+        <div className={`px-5 py-4 md:p-8 ${headerColor} text-white shrink-0 md:rounded-t-[40px]`}>
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-black tracking-tight uppercase">
+              <h2 className="text-lg md:text-2xl font-black tracking-tight uppercase">
                 {feature.details.tipo.replace('_', ' ')}
               </h2>
-              <p className="text-xs font-bold opacity-80 uppercase tracking-widest mt-1">
+              <p className="text-xs font-bold opacity-80 uppercase tracking-widest mt-0.5">
                 ID: {feature.details.id.slice(0, 8)}
               </p>
             </div>
             <button
               onClick={onClose}
-              className="w-10 h-10 rounded-full bg-black/10 flex items-center justify-center font-bold hover:bg-black/20 transition-colors text-white"
+              className="w-9 h-9 rounded-full bg-black/10 flex items-center justify-center font-bold hover:bg-black/20 transition-colors text-white shrink-0"
             >✕</button>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 space-y-6 overflow-y-auto max-h-[70vh]">
+        {/* FORM — scrollable body */}
+        <form onSubmit={handleSubmit} className="px-5 py-5 md:p-8 space-y-5 overflow-y-auto flex-1">
 
           {/* ADJUDICACIÓN — solo editors/admins */}
           {canAdjudicar && (
@@ -134,7 +144,7 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
               </label>
 
               {feature.details.adjudicado_nombre && (
-                <div className="flex items-center gap-2 mb-2">
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
                   <span className="w-2 h-2 rounded-full bg-blue-500 shrink-0"/>
                   <span className="text-xs font-bold text-blue-800">
                     Asignado a: {feature.details.adjudicado_nombre}
@@ -149,7 +159,7 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
 
               <div className="flex gap-2">
                 <select
-                  className="flex-1 bg-white border border-blue-200 rounded-2xl px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-400 transition-all"
+                  className="flex-1 bg-white border border-blue-200 rounded-2xl px-3 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-blue-400 transition-all min-w-0"
                   value={adjudicadoId}
                   onChange={e => setAdjudicadoId(e.target.value)}
                 >
@@ -162,7 +172,7 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
                   type="button"
                   disabled={isAdjudicando}
                   onClick={handleAdjudicar}
-                  className="bg-blue-600 text-white px-5 rounded-2xl font-black text-[10px] uppercase hover:bg-blue-500 transition-colors disabled:opacity-50 shrink-0"
+                  className="bg-blue-600 text-white px-4 rounded-2xl font-black text-[10px] uppercase hover:bg-blue-500 transition-colors disabled:opacity-50 shrink-0"
                 >
                   {isAdjudicando ? '...' : 'Adjudicar'}
                 </button>
@@ -176,10 +186,10 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
             </div>
           )}
 
-          {/* Banner técnico — deja en claro que puede editar */}
+          {/* Banner técnico */}
           {userRole === 'tecnico' && (
             <div className="bg-emerald-600 rounded-2xl px-4 py-3 flex items-center gap-3">
-              <span className="text-xl">🛠️</span>
+              <span className="text-xl shrink-0">🛠️</span>
               <div>
                 <p className="text-xs font-black text-white">Reporte asignado a vos</p>
                 <p className="text-[10px] text-emerald-100 font-bold mt-0.5">Podés actualizar el estado y agregar observaciones</p>
@@ -217,7 +227,7 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
 
           {/* ESTADO */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
               Estado del Reporte
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -227,7 +237,7 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
                   type="button"
                   disabled={readOnly}
                   onClick={() => !readOnly && setFormData({ ...formData, estado: est })}
-                  className={`py-3 rounded-2xl text-[10px] font-black uppercase border transition-all ${
+                  className={`py-2.5 rounded-2xl text-[10px] font-black uppercase border transition-all ${
                     formData.estado === est
                       ? 'bg-slate-900 text-white border-slate-900 shadow-lg'
                       : readOnly
@@ -243,12 +253,12 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
 
           {/* RESPONSABLE / CUADRILLA */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
               {userRole === 'tecnico' ? 'Cuadrilla de Trabajo Asignada' : 'Cuadrilla / Personal Operativo'}
             </label>
             <select
               disabled={readOnly}
-              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-60"
+              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all disabled:opacity-60"
               value={formData.responsable_id}
               onChange={e => setFormData({ ...formData, responsable_id: e.target.value })}
             >
@@ -260,23 +270,23 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
           </div>
 
           {/* CRONOGRAMA */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Inicio</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Inicio</label>
               <input
                 type="date"
                 disabled={readOnly}
-                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-xs font-bold outline-none disabled:opacity-60"
+                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-3 py-2.5 text-xs font-bold outline-none disabled:opacity-60"
                 value={formData.fecha_inicio}
                 onChange={e => setFormData({ ...formData, fecha_inicio: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Fin Estimado</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Fin estimado</label>
               <input
                 type="date"
                 disabled={readOnly}
-                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-xs font-bold outline-none disabled:opacity-60"
+                className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-3 py-2.5 text-xs font-bold outline-none disabled:opacity-60"
                 value={formData.fecha_fin}
                 onChange={e => setFormData({ ...formData, fecha_fin: e.target.value })}
               />
@@ -285,50 +295,52 @@ export default function InfraModal({ isOpen, onClose, feature, onRefresh, userRo
 
           {/* OBSERVACIONES */}
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">
               Observaciones / Log de Trabajo
             </label>
             <textarea
               disabled={readOnly}
               placeholder={readOnly ? 'Solo lectura' : 'Escribí qué se trabajó hoy...'}
-              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-5 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[100px] disabled:opacity-60"
+              className="w-full bg-slate-50 border border-slate-100 rounded-2xl px-4 py-3 text-sm font-bold outline-none focus:ring-2 focus:ring-blue-500 transition-all min-h-[80px] disabled:opacity-60"
               value={formData.observaciones}
               onChange={e => setFormData({ ...formData, observaciones: e.target.value })}
             />
           </div>
 
           {!readOnly && (
-            <div className="pt-2">
+            <div className="pt-1">
               <button
                 disabled={isSaving}
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-4 rounded-2xl font-black text-xs uppercase shadow-xl shadow-emerald-900/30 transition-all active:scale-95 disabled:opacity-50"
+                className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-2xl font-black text-xs uppercase shadow-lg transition-all active:scale-95 disabled:opacity-50"
               >
                 {isSaving ? '⏳ Guardando...' : '💾 Guardar Cambios'}
               </button>
             </div>
           )}
           {readOnly && (
-            <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest pt-2">
+            <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest pt-1">
               Modo lectura — sin permisos de edición
             </p>
           )}
 
           {/* HISTORIAL */}
           {historial.length > 0 && (
-            <div className="mt-8 border-t border-slate-100 pt-6">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2 mb-4 block">
+            <div className="border-t border-slate-100 pt-5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1 mb-4 block">
                 Historial de Actividad
               </label>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {historial.map(h => (
-                  <div key={h.id} className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="text-[9px] font-black text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded-full">
+                  <div key={h.id} className="bg-slate-50 p-3 rounded-2xl border border-slate-100">
+                    <div className="flex justify-between items-start mb-1 gap-2">
+                      <span className="text-[9px] font-black text-blue-600 uppercase bg-blue-50 px-2 py-0.5 rounded-full shrink-0">
                         {h.estado_nuevo}
                       </span>
-                      <span className="text-[9px] font-bold text-slate-400">
-                        {new Date(h.fecha_registro).toLocaleString()}
+                      <span className="text-[9px] font-bold text-slate-400 text-right">
+                        {new Date(h.fecha_registro).toLocaleString('es-AR', {
+                          day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+                        })}
                       </span>
                     </div>
                     <p className="text-xs font-bold text-slate-700">{h.responsable_nombre || 'S/R'}</p>

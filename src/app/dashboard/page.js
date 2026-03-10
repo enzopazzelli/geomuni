@@ -552,13 +552,13 @@ export default function DashboardPage() {
     <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
       <AppSidebar />
 
-      <div className="flex-1 flex flex-col overflow-auto">
+      <div className="flex-1 flex flex-col overflow-auto pb-16 md:pb-0">
         {/* Tab switcher */}
-        <div className="bg-white border-b border-slate-100 px-6 py-3 flex items-center gap-4 sticky top-0 z-20 shadow-sm">
-          <div className="flex bg-slate-100 p-1 rounded-xl">
+        <div className="bg-white border-b border-slate-100 px-3 md:px-6 py-3 flex items-center gap-4 sticky top-0 z-20 shadow-sm">
+          <div className="flex bg-slate-100 p-1 rounded-xl overflow-x-auto flex-nowrap" style={{scrollbarWidth:'none'}}>
             {TABS.map(([key, label]) => (
               <button key={key} onClick={() => setTab(key)}
-                className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all ${tab === key ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
+                className={`px-3 md:px-4 py-1.5 rounded-lg text-[10px] font-black uppercase transition-all whitespace-nowrap shrink-0 ${tab === key ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}>
                 {label}
               </button>
             ))}
@@ -568,7 +568,7 @@ export default function DashboardPage() {
         <main className="p-5 max-w-6xl mx-auto w-full">
 
           {/* MÉTRICAS */}
-          <div className="grid grid-cols-3 gap-4 mb-5">
+          <div className="grid grid-cols-3 gap-2 md:gap-4 mb-5">
             {tab === 'catastro' ? (
               <>
                 <MetricCard label="Total Parcelas"    value={parcelas.length} />
@@ -695,8 +695,9 @@ export default function DashboardPage() {
 
             /* ── OBRAS / INFRAESTRUCTURA ── */
             ) : tab === 'infraestructura' ? (
-              <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
-                <div className="overflow-x-auto">
+              <div className="bg-white rounded-3xl shadow-lg border border-slate-100">
+                {/* Tabla — desktop */}
+                <div className="hidden md:block overflow-x-auto rounded-t-3xl">
                   <table className="w-full text-left border-collapse text-sm">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-100">
@@ -732,13 +733,41 @@ export default function DashboardPage() {
                     </tbody>
                   </table>
                 </div>
+                {/* Cards — mobile */}
+                <div className="md:hidden divide-y divide-slate-100">
+                  {pagedInfra.length === 0 ? (
+                    <p className="px-5 py-10 text-center font-bold text-slate-400 text-sm">Sin resultados.</p>
+                  ) : pagedInfra.map(item => (
+                    <div key={item.id} className="p-4 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-black capitalize text-sm">{item.tipo?.replace(/_/g,' ')}</span>
+                        <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded-lg border shrink-0 ${BADGE[item.estado] || 'bg-slate-50 text-slate-500 border-slate-100'}`}>
+                          {item.estado?.replace(/_/g,' ')}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                        {item.adjudicado_a && (
+                          <span className="font-black text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full text-[10px]">
+                            👷 {item.adjudicado_nombre}
+                          </span>
+                        )}
+                        {item.responsable_nombre && <span>{item.responsable_nombre}</span>}
+                        {item.fecha_inicio && <span className="text-slate-400">{new Date(item.fecha_inicio).toLocaleDateString('es-AR')}</span>}
+                      </div>
+                      <button onClick={() => handleGoToMap(item, 'Reporte')}
+                        className="inline-flex items-center gap-1 text-[10px] font-black uppercase bg-blue-50 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-100">
+                        🗺️ Ver en mapa
+                      </button>
+                    </div>
+                  ))}
+                </div>
                 <Pager page={pageInfra} totalPages={totalPagesInfra} onPage={setPageInfra} />
               </div>
 
             /* ── HISTORIAL ── */
             ) : tab === 'historial' ? (
-              <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
-                <div className="overflow-x-auto">
+              <div className="bg-white rounded-3xl shadow-lg border border-slate-100">
+                <div className="overflow-x-auto rounded-3xl">
                   <table className="w-full text-left border-collapse text-sm">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-100">
@@ -765,8 +794,9 @@ export default function DashboardPage() {
 
             /* ── PROPIETARIOS ── */
             ) : tab === 'propietarios' ? (
-              <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
-                <div className="overflow-x-auto">
+              <div className="bg-white rounded-3xl shadow-lg border border-slate-100">
+                {/* Tabla — desktop */}
+                <div className="hidden md:block overflow-x-auto rounded-t-3xl">
                   <table className="w-full text-left border-collapse text-sm">
                     <thead>
                       <tr className="bg-slate-50 border-b border-slate-100">
@@ -808,6 +838,40 @@ export default function DashboardPage() {
                       ))}
                     </tbody>
                   </table>
+                </div>
+                {/* Cards — mobile */}
+                <div className="md:hidden divide-y divide-slate-100">
+                  {pagedProp.length === 0 ? (
+                    <p className="px-5 py-10 text-center font-bold text-slate-400 text-sm">Sin resultados.</p>
+                  ) : pagedProp.map(item => (
+                    <div key={item.id} className="p-4 flex items-start gap-3">
+                      <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-sm font-black text-slate-600 shrink-0">
+                        {item.apellido?.charAt(0)?.toUpperCase()}
+                      </div>
+                      <div className="flex-1 min-w-0 space-y-0.5">
+                        <p className="font-black text-sm">{item.apellido}, {item.nombre}</p>
+                        <p className="text-xs font-mono text-slate-500">{item.dni || 'Sin DNI'}</p>
+                        {item.contacto && <p className="text-xs text-slate-400 truncate">{item.contacto}</p>}
+                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full inline-block mt-1 ${item.parcelas_count > 0 ? 'bg-blue-50 text-blue-700' : 'bg-slate-100 text-slate-400'}`}>
+                          {item.parcelas_count} {item.parcelas_count === 1 ? 'parcela' : 'parcelas'}
+                        </span>
+                      </div>
+                      {canEdit && (
+                        <div className="flex flex-col gap-1 shrink-0">
+                          <button onClick={() => setPropModal(item)}
+                            className="text-[10px] font-black uppercase bg-slate-50 text-slate-700 px-2.5 py-1 rounded-lg border border-slate-200">
+                            ✏️
+                          </button>
+                          {canDelete && (
+                            <button onClick={() => handleDeletePropietario(item.id)}
+                              className="text-[10px] font-black uppercase bg-red-50 text-red-600 px-2.5 py-1 rounded-lg border border-red-100">
+                              🗑
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))}
                 </div>
                 <Pager page={pageProp} totalPages={totalPagesProp} onPage={setPageProp} />
               </div>
@@ -921,9 +985,9 @@ export default function DashboardPage() {
 // ─── Sub-components ───────────────────────────────────────────────────────────
 function MetricCard({ label, value, color = 'text-slate-900', small = false }) {
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
-      <p className="text-[9px] font-black text-slate-400 uppercase mb-1">{label}</p>
-      <p className={`${small ? 'text-lg' : 'text-2xl'} font-black ${color}`}>{value}</p>
+    <div className="bg-white p-3 md:p-4 rounded-2xl shadow-sm border border-slate-100">
+      <p className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase mb-1 leading-tight">{label}</p>
+      <p className={`${small ? 'text-sm md:text-lg' : 'text-lg md:text-2xl'} font-black ${color} leading-tight`}>{value}</p>
     </div>
   );
 }

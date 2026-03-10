@@ -92,7 +92,7 @@ export default function AdminPage() {
     <div className="flex min-h-screen bg-slate-50 font-sans text-slate-900">
       <AppSidebar />
 
-      <div className="flex-1 flex flex-col overflow-auto">
+      <div className="flex-1 flex flex-col overflow-auto pb-16 md:pb-0">
         {/* Header */}
         <div className="bg-white border-b border-slate-100 px-6 py-4 flex items-center justify-between sticky top-0 z-20 shadow-sm">
           <div>
@@ -207,63 +207,104 @@ export default function AdminPage() {
           )}
 
           {/* Tabla de usuarios */}
-          <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-50 border-b border-slate-100">
-                  <th className="px-5 py-3 text-[9px] font-black text-slate-400 uppercase">Usuario</th>
-                  <th className="px-5 py-3 text-[9px] font-black text-slate-400 uppercase">Email</th>
-                  <th className="px-5 py-3 text-[9px] font-black text-slate-400 uppercase">Rol</th>
-                  <th className="px-5 py-3 text-[9px] font-black text-slate-400 uppercase">Estado</th>
-                  <th className="px-5 py-3 text-[9px] font-black text-slate-400 uppercase text-center">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-50">
-                {loading ? (
-                  <tr><td colSpan="5" className="px-5 py-14 text-center font-bold text-slate-400 animate-pulse text-sm italic">Cargando usuarios...</td></tr>
-                ) : usuarios.map(u => (
-                  <tr key={u.id} className={`hover:bg-slate-50/70 transition-colors ${!u.activo ? 'opacity-50' : ''}`}>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-black text-slate-600 shrink-0">
-                          {u.nombre.charAt(0).toUpperCase()}
-                        </div>
-                        <span className="text-sm font-black">{u.nombre}</span>
-                      </div>
-                    </td>
-                    <td className="px-5 py-3 text-sm font-semibold text-slate-500">{u.email}</td>
-                    <td className="px-5 py-3">
-                      <select value={u.rol}
-                        onChange={e => handleRol(u.id, e.target.value)}
-                        className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg border outline-none cursor-pointer ${ROL_BADGE[u.rol]}`}>
-                        {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
-                      </select>
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg border ${u.activo ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
-                        {u.activo ? 'Activo' : 'Inactivo'}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="flex items-center gap-1.5 justify-center">
-                        <button onClick={() => setResetTarget({ id: u.id, nombre: u.nombre })}
-                          className="text-[9px] font-black uppercase bg-slate-50 text-slate-600 hover:bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 transition-all">
-                          🔑 Contraseña
-                        </button>
-                        <button onClick={() => handleToggle(u.id)}
-                          className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg border transition-all ${u.activo ? 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200'}`}>
-                          {u.activo ? '🔒 Suspender' : '✓ Activar'}
-                        </button>
-                        <button onClick={() => setDeleteTarget({ id: u.id, nombre: u.nombre })}
-                          className="text-[9px] font-black uppercase bg-red-50 text-red-700 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-200 transition-all">
-                          🗑 Eliminar
-                        </button>
-                      </div>
-                    </td>
+          <div className="bg-white rounded-3xl shadow-lg border border-slate-100">
+            {/* Tabla — desktop */}
+            <div className="hidden md:block overflow-x-auto rounded-3xl">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="bg-slate-50 border-b border-slate-100">
+                    <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase">Usuario</th>
+                    <th className="px-4 py-3 text-[9px] font-black text-slate-400 uppercase">Email</th>
+                    <th className="px-3 py-3 text-[9px] font-black text-slate-400 uppercase">Rol</th>
+                    <th className="px-3 py-3 text-[9px] font-black text-slate-400 uppercase">Estado</th>
+                    <th className="px-3 py-3 text-[9px] font-black text-slate-400 uppercase text-center">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-50">
+                  {loading ? (
+                    <tr><td colSpan="5" className="px-5 py-14 text-center font-bold text-slate-400 animate-pulse text-sm italic">Cargando usuarios...</td></tr>
+                  ) : usuarios.map(u => (
+                    <tr key={u.id} className={`hover:bg-slate-50/70 transition-colors ${!u.activo ? 'opacity-50' : ''}`}>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-full bg-slate-200 flex items-center justify-center text-xs font-black text-slate-600 shrink-0">
+                            {u.nombre.charAt(0).toUpperCase()}
+                          </div>
+                          <span className="text-sm font-black">{u.nombre}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm font-semibold text-slate-500">{u.email}</td>
+                      <td className="px-3 py-3">
+                        <select value={u.rol} onChange={e => handleRol(u.id, e.target.value)}
+                          className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg border outline-none cursor-pointer ${ROL_BADGE[u.rol]}`}>
+                          {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                        </select>
+                      </td>
+                      <td className="px-3 py-3">
+                        <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg border ${u.activo ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                          {u.activo ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td className="px-3 py-3">
+                        <div className="flex flex-wrap items-center gap-1 justify-center">
+                          <button onClick={() => setResetTarget({ id: u.id, nombre: u.nombre })}
+                            className="text-[9px] font-black uppercase bg-slate-50 text-slate-600 hover:bg-slate-100 px-2 py-1 rounded-lg border border-slate-200 transition-all whitespace-nowrap">
+                            🔑 Clave
+                          </button>
+                          <button onClick={() => handleToggle(u.id)}
+                            className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg border transition-all whitespace-nowrap ${u.activo ? 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200'}`}>
+                            {u.activo ? '🔒 Suspender' : '✓ Activar'}
+                          </button>
+                          <button onClick={() => setDeleteTarget({ id: u.id, nombre: u.nombre })}
+                            className="text-[9px] font-black uppercase bg-red-50 text-red-700 hover:bg-red-100 px-2 py-1 rounded-lg border border-red-200 transition-all whitespace-nowrap">
+                            🗑 Eliminar
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* Cards — mobile */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {loading ? (
+                <p className="px-5 py-10 text-center font-bold text-slate-400 animate-pulse text-sm italic">Cargando usuarios...</p>
+              ) : usuarios.map(u => (
+                <div key={u.id} className={`p-4 space-y-3 ${!u.activo ? 'opacity-50' : ''}`}>
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-full bg-slate-200 flex items-center justify-center text-sm font-black text-slate-600 shrink-0">
+                      {u.nombre.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-black text-sm truncate">{u.nombre}</p>
+                      <p className="text-xs text-slate-500 truncate">{u.email}</p>
+                    </div>
+                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg border shrink-0 ${u.activo ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-400 border-slate-200'}`}>
+                      {u.activo ? 'Activo' : 'Inactivo'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <select value={u.rol} onChange={e => handleRol(u.id, e.target.value)}
+                      className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg border outline-none cursor-pointer flex-1 ${ROL_BADGE[u.rol]}`}>
+                      {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                    <button onClick={() => setResetTarget({ id: u.id, nombre: u.nombre })}
+                      className="text-[9px] font-black uppercase bg-slate-50 text-slate-600 px-2.5 py-1.5 rounded-lg border border-slate-200">
+                      🔑
+                    </button>
+                    <button onClick={() => handleToggle(u.id)}
+                      className={`text-[9px] font-black uppercase px-2.5 py-1.5 rounded-lg border ${u.activo ? 'bg-red-50 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200'}`}>
+                      {u.activo ? '🔒' : '✓'}
+                    </button>
+                    <button onClick={() => setDeleteTarget({ id: u.id, nombre: u.nombre })}
+                      className="text-[9px] font-black uppercase bg-red-50 text-red-700 px-2.5 py-1.5 rounded-lg border border-red-200">
+                      🗑
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* Info de roles */}

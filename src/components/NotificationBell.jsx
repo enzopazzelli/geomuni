@@ -10,7 +10,7 @@ import {
   getInfraLocation,
 } from '@/app/actions/geoActions';
 
-export default function NotificationBell() {
+export default function NotificationBell({ upward = false }) {
   const router                          = useRouter();
   const [count, setCount]               = useState(0);
   const [notifs, setNotifs]             = useState([]);
@@ -91,8 +91,7 @@ export default function NotificationBell() {
       </button>
 
       {isOpen && (
-        /* Abre hacia abajo y a la derecha del botón */
-        <div className="absolute left-full top-0 ml-3 w-80 bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-50">
+        <div className={`${upward ? 'fixed bottom-20 left-3 right-3' : 'absolute left-full top-0 ml-3 w-80'} bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden z-[300]`}>
           <div className="px-4 py-3 border-b border-slate-800 flex items-center justify-between">
             <p className="text-[10px] font-black text-white uppercase tracking-widest">Notificaciones</p>
             {count > 0 && (

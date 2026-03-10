@@ -110,7 +110,7 @@ export default function MisReportesPage() {
     <div className="flex min-h-screen bg-slate-950">
       <AppSidebar />
 
-      <div className="flex-1 flex flex-col overflow-auto">
+      <div className="flex-1 flex flex-col overflow-auto pb-16 md:pb-0">
         {/* Header */}
         <div className="px-8 py-6 border-b border-slate-800 bg-slate-900 flex items-center justify-between">
           <div>
