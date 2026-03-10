@@ -116,6 +116,7 @@ export default function LeafletMap() {
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [isEditingGeom, setIsEditingGeom] = useState(false);
   const isEditingGeomRef = useRef(false);
+  const longPressTimer   = useRef(null);
   const [isSaving, setIsSaving] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
   const [showMobileControls, setShowMobileControls] = useState(false);
@@ -876,7 +877,27 @@ export default function LeafletMap() {
       }
     });
 
+    // Long press en mobile = equivalente a click derecho
+    const container = mapInstance.getContainer();
+    const onTouchStart = (e) => {
+      if (!['editor', 'administrador'].includes(userRole) || isEditingGeomRef.current) return;
+      const touch = e.touches[0];
+      longPressTimer.current = setTimeout(() => {
+        const pt = mapInstance.mouseEventToContainerPoint({ clientX: touch.clientX, clientY: touch.clientY });
+        const latlng = mapInstance.containerPointToLatLng(pt);
+        setContextMenu({ x: touch.clientX, y: touch.clientY, lat: latlng.lat, lng: latlng.lng });
+      }, 600);
+    };
+    const onTouchMove  = () => { clearTimeout(longPressTimer.current); longPressTimer.current = null; };
+    const onTouchEnd   = () => { clearTimeout(longPressTimer.current); longPressTimer.current = null; };
+    container.addEventListener('touchstart', onTouchStart, { passive: true });
+    container.addEventListener('touchmove',  onTouchMove,  { passive: true });
+    container.addEventListener('touchend',   onTouchEnd,   { passive: true });
+
     return () => {
+      container.removeEventListener('touchstart', onTouchStart);
+      container.removeEventListener('touchmove',  onTouchMove);
+      container.removeEventListener('touchend',   onTouchEnd);
       if (map.current) {
         map.current.remove();
         map.current = null;
@@ -1509,8 +1530,49 @@ export default function LeafletMap() {
         </aside>
       )}
 
-      {/* CLICK DERECHO */}
+      {/* MENÚ CONTEXTUAL (click derecho / long press) */}
       {contextMenu && !isEditingGeom && (() => {
+        const menuItems = (
+          <div className="overflow-y-auto">
+            <p className="px-4 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 border-y border-slate-100">🛣️ Viales y Pavimento</p>
+            <button onClick={() => handleCreateIncidencia('bache')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-red-500 rounded-full shrink-0" /> Bache</button>
+            <button onClick={() => handleCreateIncidencia('calle_danada')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-orange-500 rounded-full shrink-0" /> Calle Dañada</button>
+            <button onClick={() => handleCreateIncidencia('semaforo')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-yellow-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-yellow-400 rounded-full shrink-0" /> Semáforo Dañado</button>
+            <p className="px-4 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 border-y border-slate-100">💡 Alumbrado</p>
+            <button onClick={() => handleCreateIncidencia('luminaria')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-amber-400 rounded-full shrink-0" /> Luminaria Apagada</button>
+            <button onClick={() => handleCreateIncidencia('cable_caido')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-amber-600 rounded-full shrink-0" /> Cable Caído</button>
+            <p className="px-4 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 border-y border-slate-100">🗑️ Residuos</p>
+            <button onClick={() => handleCreateIncidencia('basural')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-emerald-500 rounded-full shrink-0" /> Punto de Basura</button>
+            <button onClick={() => handleCreateIncidencia('escombros')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-lime-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-lime-500 rounded-full shrink-0" /> Escombros</button>
+            <p className="px-4 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 border-y border-slate-100">🌳 Arbolado</p>
+            <button onClick={() => handleCreateIncidencia('arbol_caido')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-green-500 rounded-full shrink-0" /> Árbol Caído</button>
+            <button onClick={() => handleCreateIncidencia('arbol_peligroso')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-green-700 rounded-full shrink-0" /> Árbol Peligroso</button>
+            <p className="px-4 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 border-y border-slate-100">🏗️ Obras Viales</p>
+            <button onClick={() => handleStartDrawObra('reparacion_calle')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 flex items-center gap-3 font-bold text-slate-700">🚧 Calle en Obra (tramo)</button>
+            <button onClick={() => handleStartDrawObra('cuneta')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 flex items-center gap-3 font-bold text-slate-700">💧 Limpieza de Cuneta</button>
+            <button onClick={() => handleStartDrawZonaObra()} className="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-3 font-bold text-slate-700">📐 Zona en Construcción</button>
+            <button onClick={() => handleStartDrawObra('clausura')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-100 flex items-center gap-3 font-bold text-slate-700">🚫 Calle Clausurada</button>
+          </div>
+        );
+
+        if (isMobile) {
+          return (
+            <div className="fixed bottom-0 left-0 right-0 z-[250] bg-white rounded-t-3xl shadow-2xl flex flex-col max-h-[72vh]">
+              <div className="flex justify-center pt-3 pb-1 shrink-0">
+                <div className="w-10 h-1 rounded-full bg-slate-200" />
+              </div>
+              <div className="px-4 py-2.5 bg-slate-900 text-white flex items-center justify-between shrink-0">
+                <div>
+                  <p className="text-[8px] font-black uppercase opacity-50 tracking-tighter">Nuevo Reporte — Ubicación</p>
+                  <p className="text-[10px] font-bold">{getPlusCode(contextMenu.lat, contextMenu.lng)}</p>
+                </div>
+                <button onClick={() => setContextMenu(null)} className="text-slate-400 hover:text-white text-lg leading-none ml-4">✕</button>
+              </div>
+              {menuItems}
+            </div>
+          );
+        }
+
         const menuW = 288;
         const vw = window.innerWidth;
         const vh = window.innerHeight;
@@ -1519,42 +1581,15 @@ export default function LeafletMap() {
         const openUp = spaceBelow < 380 && spaceAbove > spaceBelow;
         const maxH = Math.min(openUp ? spaceAbove : spaceBelow, vh * 0.88) - 8;
         const left = Math.min(contextMenu.x, vw - menuW - 8);
-        const style = {
-          top: contextMenu.y,
-          left,
-          maxHeight: maxH,
-          transform: openUp ? 'translateY(-100%)' : 'none',
-        };
         return (
-        <div className="absolute z-50 bg-white shadow-2xl rounded-2xl border border-slate-200 py-2 w-72 overflow-y-auto" style={style}>
-          <div className="px-4 py-2 bg-slate-900 text-white flex flex-col gap-0.5">
-            <p className="text-[8px] font-black uppercase opacity-50 tracking-tighter">Ubicación Seleccionada</p>
-            <p className="text-[10px] font-bold truncate">{getPlusCode(contextMenu.lat, contextMenu.lng)}</p>
+          <div className="absolute z-50 bg-white shadow-2xl rounded-2xl border border-slate-200 py-2 w-72 overflow-y-auto"
+            style={{ top: contextMenu.y, left, maxHeight: maxH, transform: openUp ? 'translateY(-100%)' : 'none' }}>
+            <div className="px-4 py-2 bg-slate-900 text-white flex flex-col gap-0.5">
+              <p className="text-[8px] font-black uppercase opacity-50 tracking-tighter">Ubicación Seleccionada</p>
+              <p className="text-[10px] font-bold truncate">{getPlusCode(contextMenu.lat, contextMenu.lng)}</p>
+            </div>
+            {menuItems}
           </div>
-
-          <p className="px-4 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 border-y border-slate-100">🛣️ Viales y Pavimento</p>
-          <button onClick={() => handleCreateIncidencia('bache')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-red-500 rounded-full shrink-0" /> Bache</button>
-          <button onClick={() => handleCreateIncidencia('calle_danada')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-orange-500 rounded-full shrink-0" /> Calle Dañada</button>
-          <button onClick={() => handleCreateIncidencia('semaforo')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-yellow-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-yellow-400 rounded-full shrink-0" /> Semáforo Dañado</button>
-
-          <p className="px-4 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 border-y border-slate-100">💡 Alumbrado</p>
-          <button onClick={() => handleCreateIncidencia('luminaria')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-amber-400 rounded-full shrink-0" /> Luminaria Apagada</button>
-          <button onClick={() => handleCreateIncidencia('cable_caido')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-amber-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-amber-600 rounded-full shrink-0" /> Cable Caído</button>
-
-          <p className="px-4 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 border-y border-slate-100">🗑️ Residuos</p>
-          <button onClick={() => handleCreateIncidencia('basural')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-emerald-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-emerald-500 rounded-full shrink-0" /> Punto de Basura</button>
-          <button onClick={() => handleCreateIncidencia('escombros')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-lime-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-lime-500 rounded-full shrink-0" /> Escombros</button>
-
-          <p className="px-4 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 border-y border-slate-100">🌳 Arbolado</p>
-          <button onClick={() => handleCreateIncidencia('arbol_caido')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-green-500 rounded-full shrink-0" /> Árbol Caído</button>
-          <button onClick={() => handleCreateIncidencia('arbol_peligroso')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-green-50 flex items-center gap-3 font-bold text-slate-700"><span className="w-2.5 h-2.5 bg-green-700 rounded-full shrink-0" /> Árbol Peligroso</button>
-
-          <p className="px-4 py-1.5 text-[9px] font-black text-slate-400 uppercase tracking-widest bg-slate-50 border-y border-slate-100">🏗️ Obras Viales</p>
-          <button onClick={() => handleStartDrawObra('reparacion_calle')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 flex items-center gap-3 font-bold text-slate-700">🚧 Calle en Obra (tramo)</button>
-          <button onClick={() => handleStartDrawObra('cuneta')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-blue-50 flex items-center gap-3 font-bold text-slate-700">💧 Limpieza de Cuneta</button>
-          <button onClick={() => handleStartDrawZonaObra()} className="w-full text-left px-4 py-2.5 text-sm hover:bg-orange-50 flex items-center gap-3 font-bold text-slate-700">📐 Zona en Construcción</button>
-          <button onClick={() => handleStartDrawObra('clausura')} className="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-100 flex items-center gap-3 font-bold text-slate-700">🚫 Calle Clausurada</button>
-        </div>
         );
       })()}
     </div>
