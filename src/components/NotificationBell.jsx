@@ -67,7 +67,7 @@ export default function NotificationBell({ upward = false }) {
     if (n.referencia_id) {
       const loc = await getInfraLocation(n.referencia_id);
       if (loc) {
-        router.push(`/?id=${n.referencia_id}&type=Reporte&lat=${loc.lat}&lng=${loc.lng}`);
+        router.push(`/mapa?id=${n.referencia_id}&type=Reporte&lat=${loc.lat}&lng=${loc.lng}`);
         setIsOpen(false);
       }
     }

@@ -893,8 +893,9 @@ export default function LeafletMap() {
       const dist = Math.sqrt(dx * dx + dy * dy);
       const elapsed = now - lastTapTime.current;
       if (elapsed < 320 && dist < 30) {
-        // Doble toque detectado — cancelar el zoom de Leaflet y mostrar menú
+        // Doble toque detectado — evitar zoom de Leaflet y click sintético del browser
         e.stopPropagation();
+        e.preventDefault();
         const pt = mapInstance.mouseEventToContainerPoint({ clientX: touch.clientX, clientY: touch.clientY });
         const latlng = mapInstance.containerPointToLatLng(pt);
         setContextMenu({ x: touch.clientX, y: touch.clientY, lat: latlng.lat, lng: latlng.lng });

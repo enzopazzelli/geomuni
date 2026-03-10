@@ -506,9 +506,9 @@ export async function createReportePublico({ tipo, lat, lng, descripcion, fotos 
       RETURNING id
     `;
     const nuevoId = result[0].id;
-    // Notificar a admins y editors
+    // Notificar a admins, editors y técnicos
     const receptores = await sql`
-      SELECT id FROM usuarios WHERE rol IN ('editor', 'administrador') AND activo = TRUE
+      SELECT id FROM usuarios WHERE rol IN ('editor', 'administrador', 'tecnico') AND activo = TRUE
     `;
     const tipoLabel = tipo.replace(/_/g, ' ');
     if (receptores.length > 0) {
