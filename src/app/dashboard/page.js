@@ -9,11 +9,12 @@ import {
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import AppSidebar from '@/components/AppSidebar';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-
 // ─── PDF cedula ───────────────────────────────────────────────────────────────
-function downloadParcelaPDF(p) {
+async function downloadParcelaPDF(p) {
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
   const doc = new jsPDF();
   const bool = v => v ? 'Sí' : 'No';
   const val  = v => (v === null || v === undefined || v === '' || v === 'null') ? '—' : String(v);

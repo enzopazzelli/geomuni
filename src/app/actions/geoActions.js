@@ -392,8 +392,14 @@ export async function updateInfraestructura(id, { estado, responsable_id, fecha_
         ? `Reporte finalizado por técnico`
         : `Estado de reporte actualizado`;
       const mensaje = `El técnico ${user.name || user.email} cambió "${tipo}" a "${estado.replace(/_/g, ' ')}"`;
-      for (const ed of editores) {
-        await crearNotificacion(ed.id, 'actualizacion', titulo, mensaje, id);
+      if (editores.length > 0) {
+        const rows = editores.map(ed => ({
+          usuario_id: ed.id, tipo: 'actualizacion', titulo, mensaje,
+          referencia_id: id,
+        }));
+        try {
+          await sql`INSERT INTO notificaciones ${sql(rows, 'usuario_id', 'tipo', 'titulo', 'mensaje', 'referencia_id')}`;
+        } catch (_) {}
       }
     }
 
@@ -505,14 +511,16 @@ export async function createReportePublico({ tipo, lat, lng, descripcion, fotos 
       SELECT id FROM usuarios WHERE rol IN ('editor', 'administrador') AND activo = TRUE
     `;
     const tipoLabel = tipo.replace(/_/g, ' ');
-    for (const u of receptores) {
-      await crearNotificacion(
-        u.id,
-        'nuevo_reporte',
-        'Nuevo reporte ciudadano',
-        `Se registró un nuevo reporte de "${tipoLabel}"${obs ? ': ' + obs.slice(0, 80) : ''}`,
-        nuevoId
-      );
+    if (receptores.length > 0) {
+      const titulo = 'Nuevo reporte ciudadano';
+      const mensaje = `Se registró un nuevo reporte de "${tipoLabel}"${obs ? ': ' + obs.slice(0, 80) : ''}`;
+      const rows = receptores.map(u => ({
+        usuario_id: u.id, tipo: 'nuevo_reporte', titulo, mensaje,
+        referencia_id: nuevoId,
+      }));
+      try {
+        await sql`INSERT INTO notificaciones ${sql(rows, 'usuario_id', 'tipo', 'titulo', 'mensaje', 'referencia_id')}`;
+      } catch (_) {}
     }
     return { success: true, id: nuevoId };
   } catch (error) {

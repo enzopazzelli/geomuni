@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react';
 import { getEstadisticas } from '@/app/actions/geoActions';
 import AppSidebar from '@/components/AppSidebar';
-import { jsPDF } from 'jspdf';
-import autoTable from 'jspdf-autotable';
-
 // ─── PDF export ───────────────────────────────────────────────────────────────
-function downloadEstadisticasPDF(data) {
+async function downloadEstadisticasPDF(data) {
+  const [{ jsPDF }, { default: autoTable }] = await Promise.all([
+    import('jspdf'),
+    import('jspdf-autotable'),
+  ]);
   const doc  = new jsPDF();
   const hoy  = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: 'long', year: 'numeric' });
   const hora = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });

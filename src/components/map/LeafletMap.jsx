@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import L from 'leaflet';
 import '@geoman-io/leaflet-geoman-free';
 import 'leaflet/dist/leaflet.css';
@@ -151,6 +151,14 @@ export default function LeafletMap() {
     mq.addEventListener('change', handler);
     return () => mq.removeEventListener('change', handler);
   }, []);
+
+  const filteredPropietarios = useMemo(() => {
+    const needle = propSearch.toLowerCase();
+    if (!needle) return propietarios.slice(0, 8);
+    return propietarios.filter(p =>
+      `${p.apellido} ${p.nombre} ${p.dni}`.toLowerCase().includes(needle)
+    );
+  }, [propSearch, propietarios]);
 
   const getPlusCode = (lat, lng) => {
     try {
@@ -1068,12 +1076,7 @@ export default function LeafletMap() {
                   const currentPropId = selectedFeature.details.propietario_id;
                   const currentProp   = propietarios.find(p => p.id === currentPropId);
                   const canEdit       = ['editor','administrador'].includes(userRole);
-                  const needle        = propSearch.toLowerCase();
-                  const filtered      = propSearch.length > 0
-                    ? propietarios.filter(p =>
-                        `${p.apellido} ${p.nombre} ${p.dni}`.toLowerCase().includes(needle)
-                      )
-                    : propietarios.slice(0, 8);
+                  const filtered      = filteredPropietarios;
 
                   return (
                     <div className="space-y-2">

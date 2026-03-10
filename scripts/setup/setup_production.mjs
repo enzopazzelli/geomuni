@@ -185,6 +185,8 @@ async function run() {
   `;
   await sql`CREATE INDEX IF NOT EXISTS idx_infraestructura_posicion   ON infraestructura USING GIST (posicion);`;
   await sql`CREATE INDEX IF NOT EXISTS idx_infraestructura_adjudicado ON infraestructura(adjudicado_a);`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_infraestructura_estado     ON infraestructura(estado);`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_infraestructura_tipo       ON infraestructura(tipo);`;
   console.log('✓ Tabla infraestructura');
 
   // 8. HISTORIAL_OBRAS
@@ -199,6 +201,7 @@ async function run() {
       fecha_registro     TIMESTAMPTZ DEFAULT now()
     );
   `;
+  await sql`CREATE INDEX IF NOT EXISTS idx_historial_obras_infra ON historial_obras(infraestructura_id);`;
   console.log('✓ Tabla historial_obras');
 
   // 9. HISTORIAL_PARCELAS
@@ -234,7 +237,12 @@ async function run() {
   await sql`CREATE INDEX IF NOT EXISTS idx_notificaciones_usuario ON notificaciones(usuario_id, leida);`;
   console.log('✓ Tabla notificaciones');
 
-  // 11. USUARIO ADMIN INICIAL
+  // 11. ÍNDICES DE RENDIMIENTO EN USUARIOS
+  await sql`CREATE INDEX IF NOT EXISTS idx_usuarios_rol    ON usuarios(rol);`;
+  await sql`CREATE INDEX IF NOT EXISTS idx_usuarios_activo ON usuarios(activo);`;
+  console.log('✓ Índices de rendimiento');
+
+  // 12. USUARIO ADMIN INICIAL
   const hashedPass = await bcrypt.hash('admin123', 10);
   await sql`
     INSERT INTO usuarios (nombre, email, password, rol, activo)
