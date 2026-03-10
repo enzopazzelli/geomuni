@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getUsuarios, createUsuario, updateUsuarioRol, toggleUsuarioActivo, resetUsuarioPassword } from '@/app/actions/geoActions';
+import { getUsuarios, createUsuario, updateUsuarioRol, toggleUsuarioActivo, resetUsuarioPassword, deleteUsuario } from '@/app/actions/geoActions';
 import AppSidebar from '@/components/AppSidebar';
 
 const ROLES = ['administrador', 'editor', 'tecnico', 'consultor'];
@@ -17,8 +17,9 @@ export default function AdminPage() {
   const [usuarios, setUsuarios]     = useState([]);
   const [loading, setLoading]       = useState(true);
   const [showForm, setShowForm]     = useState(false);
-  const [resetTarget, setResetTarget] = useState(null); // { id, nombre }
-  const [resetPass, setResetPass]   = useState('');
+  const [resetTarget, setResetTarget]   = useState(null); // { id, nombre }
+  const [resetPass, setResetPass]       = useState('');
+  const [deleteTarget, setDeleteTarget] = useState(null); // { id, nombre }
   const [saving, setSaving]         = useState(false);
   const [toast, setToast]           = useState(null);
 
@@ -61,6 +62,17 @@ export default function AdminPage() {
     const result = await toggleUsuarioActivo(id);
     if (result?.error) { notify(result.error, false); return; }
     notify('Estado de cuenta actualizado.');
+    loadUsuarios();
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setSaving(true);
+    const result = await deleteUsuario(deleteTarget.id);
+    setSaving(false);
+    if (result?.error) { notify(result.error, false); setDeleteTarget(null); return; }
+    notify(`Usuario ${deleteTarget.nombre} eliminado.`);
+    setDeleteTarget(null);
     loadUsuarios();
   };
 
@@ -172,6 +184,28 @@ export default function AdminPage() {
             </div>
           )}
 
+          {/* Modal confirmar eliminación */}
+          {deleteTarget && (
+            <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center">
+              <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm">
+                <p className="text-sm font-black uppercase mb-1 text-red-700">Eliminar usuario</p>
+                <p className="text-xs text-slate-500 font-bold mb-5">
+                  ¿Eliminar permanentemente a <span className="text-slate-900">{deleteTarget.nombre}</span>? Esta acción no se puede deshacer.
+                </p>
+                <div className="flex gap-2">
+                  <button onClick={handleDelete} disabled={saving}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl text-xs font-black uppercase disabled:opacity-50 transition-all">
+                    {saving ? 'Eliminando...' : 'Sí, eliminar'}
+                  </button>
+                  <button onClick={() => setDeleteTarget(null)}
+                    className="flex-1 bg-slate-100 text-slate-700 py-2 rounded-xl text-xs font-black uppercase hover:bg-slate-200">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Tabla de usuarios */}
           <div className="bg-white rounded-3xl shadow-lg border border-slate-100 overflow-hidden">
             <table className="w-full text-left border-collapse">
@@ -219,6 +253,10 @@ export default function AdminPage() {
                         <button onClick={() => handleToggle(u.id)}
                           className={`text-[9px] font-black uppercase px-2.5 py-1 rounded-lg border transition-all ${u.activo ? 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200'}`}>
                           {u.activo ? '🔒 Suspender' : '✓ Activar'}
+                        </button>
+                        <button onClick={() => setDeleteTarget({ id: u.id, nombre: u.nombre })}
+                          className="text-[9px] font-black uppercase bg-red-50 text-red-700 hover:bg-red-100 px-2.5 py-1 rounded-lg border border-red-200 transition-all">
+                          🗑 Eliminar
                         </button>
                       </div>
                     </td>

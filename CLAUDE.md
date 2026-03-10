@@ -13,18 +13,9 @@ npm run dev       # Inicia servidor de desarrollo (localhost:3000)
 npm run build     # Compilación para producción
 npm run lint      # Ejecuta ESLint
 
-# Configuración inicial (una sola vez)
-node scripts/setup/setup_auth_db.mjs    # Inicializa tabla de auth y crea admin por defecto (admin@geomuni.gov.ar / admin123)
-node scripts/setup/repair_admin.mjs     # Repara el usuario admin si la autenticación falla
-
-# Migraciones incrementales (en orden de aplicación)
-node scripts/migrations/apply_migration.mjs
-node scripts/migrations/add_activo_column.mjs
-node scripts/migrations/add_responsabilidades.mjs
-node scripts/migrations/add_notificaciones.mjs
-node scripts/migrations/add_personal_contacto.mjs
-node scripts/migrations/add_historial_parcelas.mjs
-node scripts/migrations/fix_infraestructura_observaciones.mjs
+# Configuración inicial (una sola vez — crea todo el schema + admin por defecto)
+node scripts/setup/setup_production.mjs  # Schema completo idempotente (admin@geomuni.gov.ar / admin123)
+node scripts/setup/repair_admin.mjs      # Repara el usuario admin si la autenticación falla
 ```
 
 No hay framework de tests configurado. La validación se realiza manualmente en el navegador.

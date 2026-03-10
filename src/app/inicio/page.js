@@ -45,7 +45,7 @@ export default function LandingPage() {
         <main className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-8">
 
           <div className="space-y-4 max-w-2xl">
-            <p className="text-slate-400 text-xs font-black uppercase tracking-[0.25em]">República Argentina · Gestión Municipal</p>
+            <p className="text-slate-400 text-xs font-black uppercase tracking-[0.25em]">Ciudad de Añatuya · Gestión Municipal</p>
             <h1 className="text-4xl sm:text-5xl font-black text-white leading-tight tracking-tight">
               Gestor de Obra Pública<br/>
               <span className="text-blue-400">e Infraestructura Urbana</span>

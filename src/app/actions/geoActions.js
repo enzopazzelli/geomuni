@@ -796,6 +796,23 @@ export async function resetUsuarioPassword(id, nuevaPassword) {
   }
 }
 
+export async function deleteUsuario(id) {
+  try {
+    const me = await requireRole('administrador');
+    if (me.id === id) return { error: 'No podés eliminar tu propia cuenta.' };
+    const target = await sql`SELECT rol FROM usuarios WHERE id = ${id};`;
+    if (!target[0]) return { error: 'Usuario no encontrado.' };
+    if (target[0].rol === 'administrador') {
+      const admins = await sql`SELECT id FROM usuarios WHERE rol = 'administrador';`;
+      if (admins.length <= 1) return { error: 'No podés eliminar el único administrador.' };
+    }
+    await sql`DELETE FROM usuarios WHERE id = ${id};`;
+    return { success: true };
+  } catch (error) {
+    return { error: error.message };
+  }
+}
+
 export async function cambiarPassword(passwordActual, passwordNueva) {
   try {
     const session = await auth();
