@@ -11,7 +11,7 @@ import {
   getParcelasGeoJSON, getInfraestructuraGeoJSON, getBarriosGeoJSON,
   updateParcelaEstado, updateGeometry, createParcela, createBarrio, createIncidencia,
   deleteFeature, getPropietarios, updateParcelaPropietario, createObraVial,
-  updateParcelaFicha, getHistorialParcela, createPropietario
+  updateParcelaFicha, getHistorialParcela, createPropietario, updateInfraGeometry
 } from '@/app/actions/geoActions';
 import SearchBar from './SearchBar';
 import PropietariosModal from './PropietariosModal';
@@ -119,6 +119,7 @@ export default function LeafletMap() {
   const lastTapTime       = useRef(0);
   const lastTapPos        = useRef({ x: 0, y: 0 });
   const [isSaving, setIsSaving] = useState(false);
+  const [editInfraObs, setEditInfraObs] = useState('');
   const [contextMenu, setContextMenu] = useState(null);
   const [showMobileControls, setShowMobileControls] = useState(false);
   
@@ -689,7 +690,7 @@ export default function LeafletMap() {
 
   const handleStartModify = () => {
     if (!selectedFeature || !['editor', 'administrador'].includes(userRole) || !map.current) return;
-    
+
     const layer = findLayerByFeatureId(selectedFeature.details.id);
     if (layer) {
       isEditingGeomRef.current = true; setIsEditingGeom(true);
@@ -704,9 +705,18 @@ export default function LeafletMap() {
     }
   };
 
+  const handleStartModifyInfra = () => {
+    if (!selectedFeature || !['editor', 'administrador'].includes(userRole) || !map.current) return;
+    const layer = findLayerByFeatureId(selectedFeature.details.id);
+    if (!layer) return;
+    isEditingGeomRef.current = true; setIsEditingGeom(true);
+    map.current.drawingType = 'modify_infra';
+    layer.pm.enable({ snappable: true, draggable: false });
+  };
+
   const findLayerByFeatureId = (id) => {
     let found = null;
-    [layersRef.current.parcelas, layersRef.current.barrios, layersRef.current.infraestructura].forEach(group => {
+    [layersRef.current.parcelas, layersRef.current.barrios, layersRef.current.infraestructura, layersRef.current.infraNonPoint].forEach(group => {
       if (group) {
         group.eachLayer(l => {
           if (l.feature?.properties?.id === id) found = l;
@@ -730,6 +740,15 @@ export default function LeafletMap() {
           await updateGeometry(selectedFeature.details.id, geojson.geometry, selectedFeature.type);
           layer.pm.disable();
         }
+      } else if (mode === 'modify_infra') {
+        const layer = findLayerByFeatureId(selectedFeature.details.id);
+        if (layer) {
+          const geojson = layer.toGeoJSON();
+          const res = await updateInfraGeometry(selectedFeature.details.id, geojson.geometry, editInfraObs);
+          if (res?.error) { alert('Error: ' + res.error); setIsSaving(false); return; }
+          layer.pm.disable();
+          setEditInfraObs('');
+        }
       } else {
         // For new drawings, we wait for pm:create which is handled in the useEffect
       }
@@ -745,7 +764,7 @@ export default function LeafletMap() {
     if (map.current) {
       map.current.pm.disableDraw();
       // Disable edit on all layers
-      [layersRef.current.parcelas, layersRef.current.barrios, layersRef.current.infraestructura].forEach(group => {
+      [layersRef.current.parcelas, layersRef.current.barrios, layersRef.current.infraestructura, layersRef.current.infraNonPoint].forEach(group => {
         if (group) group.eachLayer(l => l.pm.disable());
       });
     }
@@ -1086,21 +1105,38 @@ export default function LeafletMap() {
       {/* PANEL DIBUJO */}
       {isEditingGeom && (
         <div className="absolute inset-x-0 top-20 flex justify-center z-20 px-4">
-          <div className="bg-slate-900 text-white px-6 py-4 rounded-3xl shadow-2xl flex flex-col md:flex-row items-center gap-6 border border-slate-700 max-w-2xl">
-            <div className="flex flex-col">
-              <span className="text-xs font-black text-amber-400 uppercase tracking-widest animate-pulse">
-                ✏️ {map.current?.drawingType?.startsWith('obra_') ? 'Dibujando Tramo (Línea)' : 'Editando Zona (Polígono)'}
-              </span>
-              <span className="text-[10px] text-slate-400 font-medium">
-                {map.current?.drawingType?.startsWith('obra_') 
-                  ? 'Click para añadir tramos. Doble click para finalizar la línea.'
-                  : 'Click para añadir vértices. Doble click para cerrar el área.'}
-              </span>
+          <div className="bg-slate-900 text-white px-6 py-4 rounded-3xl shadow-2xl flex flex-col items-stretch gap-4 border border-slate-700 max-w-lg w-full">
+            <div className="flex flex-col md:flex-row items-center gap-4">
+              <div className="flex flex-col flex-1">
+                <span className="text-xs font-black text-amber-400 uppercase tracking-widest animate-pulse">
+                  ✏️ {map.current?.drawingType === 'modify_infra'
+                    ? 'Modificando Tramo'
+                    : map.current?.drawingType?.startsWith('obra_')
+                      ? 'Dibujando Tramo (Línea)'
+                      : 'Editando Zona (Polígono)'}
+                </span>
+                <span className="text-[10px] text-slate-400 font-medium">
+                  {map.current?.drawingType === 'modify_infra'
+                    ? 'Arrastrá los vértices para ajustar el tramo.'
+                    : map.current?.drawingType?.startsWith('obra_')
+                      ? 'Click para añadir tramos. Doble click para finalizar la línea.'
+                      : 'Click para añadir vértices. Doble click para cerrar el área.'}
+                </span>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <button onClick={handleFinishAction} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all active:scale-95 shadow-lg shadow-emerald-500/20">Guardar</button>
+                <button onClick={handleCancel} className="bg-slate-700 hover:bg-red-500 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all active:scale-95">Descartar</button>
+              </div>
             </div>
-            <div className="flex gap-2">
-              <button onClick={handleFinishAction} className="bg-emerald-500 hover:bg-emerald-600 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all active:scale-95 shadow-lg shadow-emerald-500/20">Guardar Cambios</button>
-              <button onClick={handleCancel} className="bg-slate-700 hover:bg-red-500 text-white px-6 py-2.5 rounded-xl text-[10px] font-black uppercase transition-all active:scale-95">Descartar</button>
-            </div>
+            {map.current?.drawingType === 'modify_infra' && (
+              <textarea
+                value={editInfraObs}
+                onChange={e => setEditInfraObs(e.target.value)}
+                placeholder="Nota sobre la modificación (ej: se acortó el tramo por reparación completada)..."
+                rows={2}
+                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-xs font-medium text-slate-200 placeholder-slate-500 outline-none focus:border-blue-500 resize-none"
+              />
+            )}
           </div>
         </div>
       )}
@@ -1510,7 +1546,12 @@ export default function LeafletMap() {
             )}
             {userRole !== 'consultor' && (<>
               {(selectedFeature.type === 'Reporte' || selectedFeature.type === 'Reporte Vial') ? (
-                <button onClick={() => setIsInfraModalOpen(true)} className="w-full bg-slate-900 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-transform active:scale-95">🛠️ Gestionar Reporte</button>
+                <div className="flex flex-col gap-2">
+                  <button onClick={() => setIsInfraModalOpen(true)} className="w-full bg-slate-900 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-transform active:scale-95">🛠️ Gestionar Reporte</button>
+                  {selectedFeature.type === 'Reporte Vial' && ['editor','administrador'].includes(userRole) && (
+                    <button onClick={handleStartModifyInfra} className="w-full bg-slate-700 hover:bg-slate-600 text-white py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition-colors active:scale-95">✏️ Modificar Tramo</button>
+                  )}
+                </div>
               ) : ['editor','administrador'].includes(userRole) ? (
                 <button onClick={handleStartModify} className="w-full bg-slate-900 text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-transform active:scale-95">✏️ Modificar Forma</button>
               ) : null}

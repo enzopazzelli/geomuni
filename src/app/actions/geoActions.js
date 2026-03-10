@@ -409,6 +409,24 @@ export async function updateInfraestructura(id, { estado, responsable_id, fecha_
   }
 }
 
+export async function updateInfraGeometry(id, geometry, observaciones) {
+  try {
+    await requireRole('editor');
+    const current = await sql`SELECT estado FROM infraestructura WHERE id = ${id}`;
+    const estado = current[0]?.estado;
+    await sql`
+      UPDATE infraestructura
+      SET posicion = ST_SetSRID(ST_GeomFromGeoJSON(${JSON.stringify(geometry)}), 4326)
+      WHERE id = ${id}
+    `;
+    await sql`
+      INSERT INTO historial_obras (infraestructura_id, estado_anterior, estado_nuevo, observaciones)
+      VALUES (${id}, ${estado}, ${estado}, ${observaciones?.trim() || 'Geometría del tramo actualizada'})
+    `;
+    return { success: true };
+  } catch (error) { return { error: error.message }; }
+}
+
 export async function getHistorialObra(infraId) {
   try {
     return await sql`
