@@ -1,0 +1,32 @@
+{
+  "name": "geomuni-temp",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@geoman-io/leaflet-geoman-free": "^2.19.2",
+    "@neondatabase/serverless": "^1.0.2",
+    "bcryptjs": "^3.0.3",
+    "jspdf": "^4.2.0",
+    "jspdf-autotable": "^5.0.7",
+    "leaflet": "^1.9.4",
+    "leaflet.markercluster": "^1.5.3",
+    "next": "16.1.6",
+    "next-auth": "^5.0.0-beta.30",
+    "open-location-code": "^1.0.3",
+    "postgres": "^3.4.8",
+    "react": "19.2.3",
+    "react-dom": "19.2.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "eslint": "^9",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4"
+  }
+}
