@@ -116,8 +116,8 @@ export default function LeafletMap() {
   const [selectedFeature, setSelectedFeature] = useState(null);
   const [isEditingGeom, setIsEditingGeom] = useState(false);
   const isEditingGeomRef  = useRef(false);
-  const longPressTimer    = useRef(null);
-  const activeTouchCount  = useRef(0);
+  const lastTapTime       = useRef(0);
+  const lastTapPos        = useRef({ x: 0, y: 0 });
   const [isSaving, setIsSaving] = useState(false);
   const [contextMenu, setContextMenu] = useState(null);
   const [showMobileControls, setShowMobileControls] = useState(false);
@@ -881,34 +881,34 @@ export default function LeafletMap() {
       }
     });
 
-    // Long press en mobile = equivalente a click derecho
+    // Doble toque en mobile = equivalente a click derecho (solo editor/admin)
     const container = mapInstance.getContainer();
-    const cancelLongPress = () => { clearTimeout(longPressTimer.current); longPressTimer.current = null; };
-    const onTouchStart = (e) => {
-      activeTouchCount.current = e.touches.length;
-      // Cualquier gesto multi-touch (pellizco/zoom) cancela el long press
-      if (e.touches.length > 1) { cancelLongPress(); return; }
+    const onTouchEnd = (e) => {
       if (!['editor', 'administrador'].includes(userRoleRef.current) || isEditingGeomRef.current) return;
-      const touch = e.touches[0];
-      longPressTimer.current = setTimeout(() => {
-        // Verificar al momento de disparar que sigue siendo toque simple
-        if (activeTouchCount.current !== 1) return;
+      if (e.changedTouches.length !== 1) return;
+      const touch = e.changedTouches[0];
+      const now = Date.now();
+      const dx = touch.clientX - lastTapPos.current.x;
+      const dy = touch.clientY - lastTapPos.current.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      const elapsed = now - lastTapTime.current;
+      if (elapsed < 320 && dist < 30) {
+        // Doble toque detectado — cancelar el zoom de Leaflet y mostrar menú
+        e.stopPropagation();
         const pt = mapInstance.mouseEventToContainerPoint({ clientX: touch.clientX, clientY: touch.clientY });
         const latlng = mapInstance.containerPointToLatLng(pt);
         setContextMenu({ x: touch.clientX, y: touch.clientY, lat: latlng.lat, lng: latlng.lng });
-      }, 600);
+        lastTapTime.current = 0; // reset para no disparar triple toque
+        return;
+      }
+      lastTapTime.current = now;
+      lastTapPos.current  = { x: touch.clientX, y: touch.clientY };
     };
-    const onTouchMove  = (e) => { activeTouchCount.current = e.touches.length; cancelLongPress(); };
-    const onTouchEnd   = (e) => { activeTouchCount.current = e.touches.length; cancelLongPress(); };
-    // capture:true — se ejecuta antes que los handlers de Leaflet (evita stopPropagation)
-    container.addEventListener('touchstart', onTouchStart, { passive: true, capture: true });
-    container.addEventListener('touchmove',  onTouchMove,  { passive: true, capture: true });
-    container.addEventListener('touchend',   onTouchEnd,   { passive: true, capture: true });
+    // capture:true — se ejecuta antes que Leaflet para poder cancelar el zoom con stopPropagation
+    container.addEventListener('touchend', onTouchEnd, { capture: true });
 
     return () => {
-      container.removeEventListener('touchstart', onTouchStart, { capture: true });
-      container.removeEventListener('touchmove',  onTouchMove,  { capture: true });
-      container.removeEventListener('touchend',   onTouchEnd,   { capture: true });
+      container.removeEventListener('touchend', onTouchEnd, { capture: true });
       if (map.current) {
         map.current.remove();
         map.current = null;
