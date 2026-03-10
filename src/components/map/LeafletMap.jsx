@@ -883,6 +883,12 @@ export default function LeafletMap() {
     // Long press en mobile = equivalente a click derecho
     const container = mapInstance.getContainer();
     const onTouchStart = (e) => {
+      // Cancelar si es gesto multi-touch (pellizco para zoom)
+      if (e.touches.length > 1) {
+        clearTimeout(longPressTimer.current);
+        longPressTimer.current = null;
+        return;
+      }
       if (!['editor', 'administrador'].includes(userRoleRef.current) || isEditingGeomRef.current) return;
       const touch = e.touches[0];
       longPressTimer.current = setTimeout(() => {
