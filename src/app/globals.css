@@ -5,6 +5,11 @@
   --foreground: #171717;
 }
 
+/* Landing smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
